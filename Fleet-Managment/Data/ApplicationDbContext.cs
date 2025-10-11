@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Fleet_Managment.Models;
 
 namespace Fleet_Managment.Data
 {
@@ -9,5 +10,6 @@ namespace Fleet_Managment.Data
             : base(options)
         {
         }
+        public DbSet<Fleet_Managment.Models.Vehicle> Vehicle { get; set; } = default!;
     }
 }
