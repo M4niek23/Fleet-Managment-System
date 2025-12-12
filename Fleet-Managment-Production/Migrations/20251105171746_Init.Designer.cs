@@ -4,6 +4,7 @@ using Fleet_Managment_Production.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fleet_Managment_Production.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251105171746_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,77 +24,6 @@ namespace Fleet_Managment_Production.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Cost", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Data")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("Kwota")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<string>("Opis")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VehicleId");
-
-                    b.ToTable("Costs", (string)null);
-                });
-
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Inspection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("InspectionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsResultPositive")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("Mileage")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("NextInspectionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VehicleId");
-
-                    b.ToTable("Inspections");
-                });
 
             modelBuilder.Entity("Fleet_Managment_Production.Models.Insurance", b =>
                 {
@@ -105,7 +37,7 @@ namespace Fleet_Managment_Production.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Cost")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
@@ -212,7 +144,7 @@ namespace Fleet_Managment_Production.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Vehicle", b =>
+            modelBuilder.Entity("Fleet_Managment_Production.Models.VehicleTable.Vehicle", b =>
                 {
                     b.Property<int>("VehicleId")
                         .ValueGeneratedOnAdd()
@@ -223,8 +155,9 @@ namespace Fleet_Managment_Production.Migrations
                     b.Property<int>("CurrentKm")
                         .HasColumnType("int");
 
-                    b.Property<int>("FuelType")
-                        .HasColumnType("int");
+                    b.Property<string>("FuelType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("LicensePlate")
                         .HasMaxLength(20)
@@ -401,31 +334,9 @@ namespace Fleet_Managment_Production.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Cost", b =>
-                {
-                    b.HasOne("Fleet_Managment_Production.Models.Vehicle", "Vehicle")
-                        .WithMany("Costs")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Vehicle");
-                });
-
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Inspection", b =>
-                {
-                    b.HasOne("Fleet_Managment_Production.Models.Vehicle", "Vehicle")
-                        .WithMany("Inspections")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Vehicle");
-                });
-
             modelBuilder.Entity("Fleet_Managment_Production.Models.Insurance", b =>
                 {
-                    b.HasOne("Fleet_Managment_Production.Models.Vehicle", "Vehicle")
+                    b.HasOne("Fleet_Managment_Production.Models.VehicleTable.Vehicle", "Vehicle")
                         .WithMany("Insurances")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -434,7 +345,7 @@ namespace Fleet_Managment_Production.Migrations
                     b.Navigation("Vehicle");
                 });
 
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Vehicle", b =>
+            modelBuilder.Entity("Fleet_Managment_Production.Models.VehicleTable.Vehicle", b =>
                 {
                     b.HasOne("Fleet_Managment_Production.Models.Users", "User")
                         .WithMany("Vehicles")
@@ -500,12 +411,8 @@ namespace Fleet_Managment_Production.Migrations
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("Fleet_Managment_Production.Models.Vehicle", b =>
+            modelBuilder.Entity("Fleet_Managment_Production.Models.VehicleTable.Vehicle", b =>
                 {
-                    b.Navigation("Costs");
-
-                    b.Navigation("Inspections");
-
                     b.Navigation("Insurances");
                 });
 #pragma warning restore 612, 618

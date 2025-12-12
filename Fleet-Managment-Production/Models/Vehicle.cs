@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore; 
-using Fleet_Managment_Production.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace Fleet_Managment_Production.Models.VehicleTable
+namespace Fleet_Managment_Production.Models
 {
     [Index(nameof(VIN), IsUnique = true)]
     [Index(nameof(LicensePlate), IsUnique = true)]
@@ -16,7 +15,7 @@ namespace Fleet_Managment_Production.Models.VehicleTable
         public VehicleStatus Status { get; set; } = VehicleStatus.Available;
 
 
-        [Required, StringLength(50)]
+        [Display(Name = "Marka"), Required, StringLength(50)]
         public string Make { get; set; } = null!;
 
 
@@ -24,15 +23,15 @@ namespace Fleet_Managment_Production.Models.VehicleTable
         public string Model { get; set; } = null!;
 
 
-        [StringLength(20)]
-        public string? FuelType { get; set; }
+        [Display(Name = "Typ paliwa")]
+        public FuelType FuelType { get; set; }
 
 
-        [Range(1886, 2100)]
+        [Display(Name = "Rok produkcji"), Range(1886, 2100)]
         public int ProductionYear { get; set; }
 
 
-        [StringLength(20)]
+        [Display(Name = "Numer rejestracyjny"), StringLength(20)]
         public string? LicensePlate { get; set; }
 
 
@@ -41,7 +40,7 @@ namespace Fleet_Managment_Production.Models.VehicleTable
         public string? VIN { get; set; }
 
 
-        [Range(0, int.MaxValue)]
+        [Display(Name = "Aktualny przebieg"), Range(0, int.MaxValue)]
         public int CurrentKm { get; set; }
 
 
@@ -50,5 +49,9 @@ namespace Fleet_Managment_Production.Models.VehicleTable
 
         [ForeignKey(nameof(UserId))]
         public Users? User { get; set; }
+
+        public ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
+        public ICollection<Insurance> Insurances { get; set; } = new List<Insurance>();
+        public ICollection<Cost> Costs { get; set; } = new List<Cost>();
     }
 }

@@ -1,10 +1,23 @@
-﻿namespace Fleet_Managment_Production.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Fleet_Managment_Production.Models
 {
+    // W pliku enum dla Statusu
     public enum VehicleStatus
     {
-        Available = 0,
-        InUse = 1,
-        InMaintenance = 2,
-        Decommissioned = 3 
+        [Display(Name = "Dostępny")]
+        Available,
+
+        [Display(Name = "W użyciu")]
+        InUse,
+
+        [Display(Name = "W serwisie")]
+        InMaintenance,
+
+        [Display(Name = "Sprzedany")]
+        Sold,
+
+        [Display(Name = "Wycofany")]
+        Decommissioned
     }
 }
