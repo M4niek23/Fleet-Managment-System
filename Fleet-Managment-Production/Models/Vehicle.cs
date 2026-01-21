@@ -4,7 +4,42 @@ using Microsoft.EntityFrameworkCore;
 
 
 namespace Fleet_Managment_Production.Models
-{
+{   
+    public enum FuelType
+    {
+        [Display(Name = "Benzyna (PB)")]
+        Benzyna,
+
+        [Display(Name = "Olej napędowy (ON)")]
+        Diesel,
+
+        [Display(Name = "Napęd hybrydowy (HEV/PHEV)")]
+        Hybryda,
+
+        [Display(Name = "Napęd elektryczny (BEV)")]
+        Elektryk,
+
+        [Display(Name = "Gaz (LPG/CNG)")]
+        LPG
+    }
+    public enum VehicleStatus
+    {
+        [Display(Name = "Dostępny")]
+        Available,
+
+        [Display(Name = "W użyciu")]
+        InUse,
+
+        [Display(Name = "W serwisie")]
+        InMaintenance,
+
+        [Display(Name = "Sprzedany")]
+        Sold,
+
+        [Display(Name = "Wycofany")]
+        Decommissioned
+    }
+
     [Index(nameof(VIN), IsUnique = true)]
     [Index(nameof(LicensePlate), IsUnique = true)]
     public class Vehicle
@@ -43,17 +78,18 @@ namespace Fleet_Managment_Production.Models
         [Display(Name = "Aktualny przebieg (km)"), Range(0, int.MaxValue)]
         public int CurrentKm { get; set; }
 
-        [Display(Name = "Email Użytkownika")]
+        [Display(Name = "Właściciel")]
         public string? UserId { get; set; }
 
 
         [ForeignKey(nameof(UserId))]
-        [Display(Name = "Użytkownik")]
+        [Display(Name = "Właścicel")]
         public Users? User { get; set; }
 
         [Display(Name = "Kierowca")]
         public int? DriverId { get; set; }
 
+        [Display(Name = "Kierowca")]
         [ForeignKey(nameof(DriverId))]
         public Driver? Driver { get; set; }
 

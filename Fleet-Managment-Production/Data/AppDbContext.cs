@@ -1,5 +1,4 @@
-﻿using AspNetCoreGeneratedDocument;
-using Fleet_Managment_Production.Models;
+﻿using Fleet_Managment_Production.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +14,8 @@ namespace Fleet_Managment_Production.Data
         public DbSet<Inspection> Inspections { get; set; }
         public DbSet<Cost> Costs { get; set; }
         public DbSet<Driver> Drivers { get; set; }
+        public DbSet<Trip> Trips { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBilder)
         {
             base.OnModelCreating(modelBilder);
@@ -50,6 +51,18 @@ namespace Fleet_Managment_Production.Data
                 .WithOne(d => d.Driver)
                 .HasForeignKey(v => v.DriverId)
                 .OnDelete(DeleteBehavior.SetNull);
+            // Konfiguracja relacji Vehicle do Trip
+            modelBilder.Entity<Trip>()
+                .HasOne(t => t.Vehicle)
+                .WithMany()
+                .HasForeignKey(t => t.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            //Konfiguracja relacji Driver do Trip
+            modelBilder.Entity<Trip>()
+                .HasOne(t => t.Driver)
+                .WithMany()
+                .HasForeignKey(t => t.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

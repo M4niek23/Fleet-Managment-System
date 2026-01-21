@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-car-front-fill"></i> @ViewData["Title"]</h1>
     <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm">
-        <i class="bi bi-plus-circle-fill"></i> Dodaj nowy pojazd
+        <i class="bi bi-plus-circle-fill"></i> Dodaj
     </a>
 </div>
 
@@ -18,7 +18,7 @@
         <thead class="table-dark">
             <tr>
                 <th>
-                    Pojazd (Marka / Model)
+                    Marka / Model
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.LicensePlate)
@@ -109,7 +109,7 @@
                                 <i class="bi bi-pencil-fill"></i> Edytuj
                             </a>
                             <a asp-action="Details" asp-route-id="@item.VehicleId" class="btn btn-outline-info">
-                                <i class="bi bi-eye-fill"></i> Detale
+                                <i class="bi bi-eye-fill"></i> Szczegóły
                             </a>
                             <a asp-action="Delete" asp-route-id="@item.VehicleId" class="btn btn-outline-danger">
                                 <i class="bi bi-trash-fill"></i> Usuń

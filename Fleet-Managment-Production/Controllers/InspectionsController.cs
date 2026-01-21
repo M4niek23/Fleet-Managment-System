@@ -1,12 +1,9 @@
 ﻿using Fleet_Managment_Production.Data;
 using Fleet_Managment_Production.Models;
-using Fleet_Managment_Production.ViewModels; // Upewnij się, że ten using jest poprawny
+using Fleet_Managment_Production.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Fleet_Managment_Production.Controllers
 {
@@ -33,14 +30,22 @@ namespace Fleet_Managment_Production.Controllers
 
             var viewModel = new InspectionsViewModel
             {
-                UpcomingInspections = allInspections
-                                            .Where(i => i.IsActive == true && i.InspectionDate.Date >= DateTime.Today)
-                                            .ToList(),
+                ActiveInspections = allInspections
+                                     .Where(i => i.IsResultPositive != false &&
+                                                (i.NextInspectionDate == null || i.NextInspectionDate >= DateTime.Today))
+                                     .OrderBy(i => i.InspectionDate) 
+                                     .ToList(),
                 HistoricalInspections = allInspections
-                                            .Where(i => i.IsActive == false || i.InspectionDate.Date < DateTime.Today)
-                                            .ToList()
-            };
+                                     .Where(i => i.IsResultPositive != false &&
+                                                 i.NextInspectionDate < DateTime.Today)
+                                     .OrderByDescending(i => i.InspectionDate)
+                                     .ToList(),
 
+                NegativeInspections = allInspections
+                                     .Where(i => i.IsResultPositive == false)
+                                     .OrderByDescending(i => i.InspectionDate)
+                                     .ToList()
+            };
             return View(viewModel);
         }
 
@@ -80,7 +85,6 @@ namespace Fleet_Managment_Production.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,InspectionDate,Description,Mileage,Cost,VehicleId,IsResultPositive,IsActive")] Inspection inspection)
         {
-            // Logika walidacji "jeden aktywny"
             if (inspection.IsActive == true && inspection.InspectionDate.Date >= DateTime.Today)
             {
                 var existingUpcoming = await _context.Inspections
@@ -109,7 +113,6 @@ namespace Fleet_Managment_Production.Controllers
 
             if (ModelState.IsValid)
             {
-                // Logika synchronizacji przebiegu
                 if (inspection.Mileage.HasValue && inspection.Mileage > 0)
                 {
                     var vehicleToUpdate = await _context.Vehicles.FindAsync(inspection.VehicleId);

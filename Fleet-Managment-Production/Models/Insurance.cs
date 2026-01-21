@@ -1,5 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
@@ -64,6 +63,7 @@ namespace Fleet_Managment_Production.Models
         [Required(ErrorMessage ="Musisz wybrać pojazd z listy.")]
         public int? VehicleId { get; set; }
         [ValidateNever]
+        [Display(Name ="Pojazd")]
         public Vehicle Vehicle { get; set; }
     }
 }
