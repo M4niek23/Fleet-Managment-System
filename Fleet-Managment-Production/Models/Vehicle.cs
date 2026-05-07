@@ -1,0 +1,92 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace Fleet_Managment_Production.Models
+{
+    public enum FuelType
+    {
+        [Display(Name = "Benzyna (PB)")] Benzyna,
+        [Display(Name = "Olej napędowy (ON)")] Diesel,
+        [Display(Name = "Napęd hybrydowy (HEV/PHEV)")] Hybryda,
+        [Display(Name = "Napęd elektryczny (BEV)")] Elektryk,
+        [Display(Name = "Gaz (LPG/CNG)")] LPG
+    }
+    public enum VehicleStatus
+    {
+        [Display(Name = "Dostępny")] Available,
+        [Display(Name = "W użyciu")] InUse,
+        [Display(Name = "W serwisie")] InMaintenance,
+        [Display(Name = "Sprzedany")] Sold,
+    }
+
+    [Index(nameof(VIN), IsUnique = true)]
+    [Index(nameof(LicensePlate), IsUnique = true)]
+    public class Vehicle : IValidatableObject 
+    {
+        public int VehicleId { get; set; }
+
+        [EnumDataType(typeof(VehicleStatus), ErrorMessage = "Nieprawidłowy status pojazdu.")] 
+        public VehicleStatus Status { get; set; } = VehicleStatus.Available;
+
+        [Display(Name = "Marka"), Required(ErrorMessage = "Pole Marka jest wymagane."), StringLength(50)]
+        public string Make { get; set; } = null!;
+
+        [Required(ErrorMessage = "Pole Model jest wymagane."), StringLength(50)]
+        public string Model { get; set; } = null!;
+
+        [Required(ErrorMessage = "Pole Typ paliwa jest wymagane.")]
+        [Display(Name = "Typ paliwa")]
+        [EnumDataType(typeof(FuelType), ErrorMessage = "Nieprawidłowy typ paliwa.")]
+        public FuelType FuelType { get; set; }
+
+        [Required(ErrorMessage = "Pole Rok produkcji jest wymagane.")]
+        [Display(Name = "Rok produkcji"), Range(1886, 2100)]
+        public int ProductionYear { get; set; }
+
+        [Display(Name = "Numer rejestracyjny")]
+        [Required(ErrorMessage = "Numer rejestracyjny jest wymagany.")]
+        [StringLength(20)]
+        public string? LicensePlate { get; set; }
+
+        [Display(Name = "Nr VIN")]
+        [Required(ErrorMessage = "Numer VIN jest wymagany.")]
+        [StringLength(17, MinimumLength = 17, ErrorMessage = "Nr VIN musi posiadać dokładnie 17 znaków.")]
+        [RegularExpression(@"^[A-HJ-NPR-STUVWX-Z0-9]{17}$", ErrorMessage = "Nieprawidłowy format nr VIN.")]
+        public string? VIN { get; set; }
+
+        [Required(ErrorMessage = "Pole Aktualny przebieg jest wymagane.")]
+        [Display(Name = "Aktualny przebieg (km)"), Range(0, int.MaxValue)]
+        public int CurrentKm { get; set; }
+
+        [Display(Name = "Właściciel")]
+        public string? UserId { get; set; }
+
+        [ForeignKey(nameof(UserId))]
+        [Display(Name = "Właścicel")]
+        public Users? User { get; set; }
+
+        [Display(Name = "Kierowca")]
+        public int? DriverId { get; set; }
+
+        [Display(Name = "Kierowca")]
+        [ForeignKey(nameof(DriverId))]
+        public Driver? Driver { get; set; }
+
+        public ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
+        public ICollection<Insurance> Insurances { get; set; } = new List<Insurance>();
+        public ICollection<Cost> Costs { get; set; } = new List<Cost>();
+        public ICollection<Trip> Trips { get; set; } = new List<Trip>();
+        public ICollection<Service> Services { get; set; } = new List<Service>();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (ProductionYear > DateTime.Now.Year + 1)
+            {
+                yield return new ValidationResult(
+                    $"Rok produkcji nie może być większy niż {DateTime.Now.Year + 1}.",
+                    new[] { nameof(ProductionYear) });
+            }
+        }
+    }
+}

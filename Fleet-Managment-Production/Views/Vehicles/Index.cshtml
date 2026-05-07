@@ -1,0 +1,240 @@
+﻿@using Fleet_Managment_Production.Models
+@model IEnumerable<Vehicle>
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Pojazdy</h3>
+            <p class="text-muted mb-0">Zarządzaj flotą samochodową w Twojej firmie.</p>
+            <p class="text-muted mb-0">Kierowca: <strong>@ViewBag.SelectedDriverName</strong></p>
+        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a asp-action="Create" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i>Dodaj Pojazd
+            </a>
+        }
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body py-2">
+            <form asp-action="Index" method="get" class="row g-2 align-items-center">
+                <input type="hidden" name="status" value="@ViewBag.CurrentStatus" />
+                <input type="hidden" name="sortOrder" value="@Context.Request.Query["sortOrder"]" />
+
+                <div class="col-auto">
+                    <label class="text-secondary small fw-bold">Kierowca:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="driverId" class="form-select form-select-sm border-0 shadow-sm" asp-items="@ViewBag.DriverList" onchange="this.form.submit()">
+                        <option value="">Wszyscy kierowcy</option>
+                    </select>
+                </div>
+                <div class="col-auto ms-auto">
+                    <input type="text" name="searchString" value="@ViewData["CurrentFilter"]"
+                           class="form-control form-control-sm border-0 shadow-sm" placeholder="Szukaj marki, rejestracji..." />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-dark"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-auto">
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary bg-white border-0 shadow-sm" title="Wyczyść"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light border-bottom-0 p-0">
+            <ul class="nav nav-tabs nav-fill card-header-tabs m-0" id="vehicleTabs">
+                <li class="nav-item">
+                    <a class="nav-link py-3 fw-bold @(ViewBag.CurrentStatus == null ? "active" : "")"
+                       asp-action="Index" asp-route-status="" asp-route-driverId="@ViewBag.CurrentDriverId" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        Wszystkie <span class="badge bg-secondary rounded-pill ms-2">@ViewBag.CountAll</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-3 fw-bold text-success @(ViewBag.CurrentStatus == VehicleStatus.Available ? "active" : "")"
+                       asp-action="Index" asp-route-status="Available" asp-route-driverId="@ViewBag.CurrentDriverId" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        Dostępne <span class="badge bg-success rounded-pill ms-2">@ViewBag.CountAvailable</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-3 fw-bold text-primary @(ViewBag.CurrentStatus == VehicleStatus.InUse ? "active" : "")"
+                       asp-action="Index" asp-route-status="InUse" asp-route-driverId="@ViewBag.CurrentDriverId" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        W trasie <span class="badge bg-primary rounded-pill ms-2">@ViewBag.CountInUse</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-3 fw-bold text-warning @(ViewBag.CurrentStatus == VehicleStatus.InMaintenance ? "active" : "")"
+                       asp-action="Index" asp-route-status="InMaintenance" asp-route-driverId="@ViewBag.CurrentDriverId" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        Serwis <span class="badge bg-warning rounded-pill ms-2">@ViewBag.CountMaintenance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-3 fw-bold text-muted @(ViewBag.CurrentStatus == VehicleStatus.Sold ? "active" : "")"
+                       asp-action="Index" asp-route-status="Sold" asp-route-driverId="@ViewBag.CurrentDriverId" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        Sprzedane <span class="badge bg-secondary rounded-pill ms-2">@ViewBag.CountSold</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Pojazd</th>
+                            <th>Rejestracja / VIN</th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewBag.DriverSortParam"
+                                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                                   asp-route-driverId="@ViewBag.CurrentDriverId"
+                                   asp-route-status="@ViewBag.CurrentStatus"
+                                   class="text-dark text-decoration-none">
+                                    Kierowca <i class="bi bi-arrow-down-up small"></i>
+                                </a>
+                            </th>
+                            <th>Status</th>
+                            <th>Przebieg</th>
+                            <th class="text-end pe-4">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">Brak pojazdów pasujących do wyszukiwania.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                                <i class="bi bi-car-front-fill fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">@item.Make @item.Model</div>
+                                                <div class="text-muted small">@item.ProductionYear • @item.FuelType</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-bold">@item.LicensePlate</div>
+                                        <div class="text-muted small font-monospace">@item.VIN</div>
+                                    </td>
+
+                                    <td>
+                                        @if (item.Driver != null)
+                                        {
+                                            <div class="fw-bold">@item.Driver.FirstName @item.Driver.LastName</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic small">Brak przypisanego</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @switch (item.Status)
+                                        {
+                                            case Fleet_Managment_Production.Models.VehicleStatus.Available:
+                                                <span class="badge-soft badge-soft-success">Dostępny</span>
+                                                break;
+                                            case Fleet_Managment_Production.Models.VehicleStatus.InUse:
+                                                <span class="badge-soft badge-soft-primary">W trasie</span>
+                                                break;
+                                            case Fleet_Managment_Production.Models.VehicleStatus.InMaintenance:
+                                                <span class="badge-soft badge-soft-warning">Serwis</span>
+                                                break;
+                                            case Fleet_Managment_Production.Models.VehicleStatus.Sold:
+                                                <span class="badge-soft badge-soft-gray">Sprzedany</span>
+                                                break;
+                                            default:
+                                                <span class="badge-soft badge-soft-gray">@item.Status</span>
+                                                break;
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="fw-semibold">@item.CurrentKm</span> <span class="text-muted small">km</span>
+                                    </td>
+
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group shadow-sm">
+                                            <a asp-action="Details" asp-route-id="@item.VehicleId" class="btn-table-action" title="Szczegóły">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.VehicleId" class="btn-table-action" title="Edytuj">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            }
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <form asp-action="Delete" asp-route-id="@item.VehicleId" method="post" class="d-inline">
+                                                    <button type="button" class="btn-table-action btn-delete-swal" title="Usuń">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav aria-label="Nawigacja stronami" class="mt-4 pb-4">
+            <ul class="pagination justify-content-center flex-wrap shadow-sm mb-0">
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@(ViewBag.CurrentPage - 1)"
+                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                       asp-route-driverId="@ViewBag.CurrentDriverId"
+                       asp-route-status="@ViewBag.CurrentStatus"
+                       asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i"
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-driverId="@ViewBag.CurrentDriverId"
+                           asp-route-status="@ViewBag.CurrentStatus"
+                           asp-route-sortOrder="@Context.Request.Query["sortOrder"]">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@(ViewBag.CurrentPage + 1)"
+                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                       asp-route-driverId="@ViewBag.CurrentDriverId"
+                       asp-route-status="@ViewBag.CurrentStatus"
+                       asp-route-sortOrder="@Context.Request.Query["sortOrder"]">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

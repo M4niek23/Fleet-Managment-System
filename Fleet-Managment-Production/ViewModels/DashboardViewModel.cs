@@ -1,0 +1,11 @@
+﻿using Fleet_Managment_Production.Models;
+using System.Collections.Generic;
+
+namespace Fleet_Managment_Production.ViewModels
+{
+    public class DashboardViewModel
+    {
+        public List<Insurance> ExpiringInsurances { get; set; }
+        public List<Inspection> ExpiringInspections { get; set; }
+    }
+}

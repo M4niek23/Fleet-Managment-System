@@ -1,0 +1,21 @@
+﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $.validator.methods.number = function (value, element) {
+        return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:[\s\.,]\d{3})+)(?:[\.,]\d+)?$/.test(value);
+    }
+
+    $.validator.methods.range = function (value, element, param) {
+        var globalizedValue = value.replace(",", ".");
+        return this.optional(element) || (globalizedValue >= param[0] && globalizedValue <= param[1]);
+    }
+
+    if ($.validator) {
+            $.extend($.validator.messages, {
+                min: $.validator.format("Proszę wpisać datę późniejszą lub równą {0}."),
+                // Możesz też dodać inne, np:
+                required: "To pole jest wymagane.",
+                number: "Proszę wpisać poprawną liczbę."
+            });
+        }
+</script>

@@ -1,0 +1,114 @@
+﻿@model Fleet_Managment_Production.Models.Service
+
+@{
+    ViewData["Title"] = "Edytuj Serwis";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">
+            <i class="bi bi-pencil-square text-primary me-2"></i>Edycja / Zakończenie serwisu
+        </h2>
+        <p class="text-muted mb-0">Zaktualizuj dane wpisu serwisowego lub zakończ naprawę, aby zwolnić pojazd.</p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="VehicleId" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-4 mb-md-0 pe-md-4 border-end-md">
+                        <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Informacje podstawowe</h5>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted">Pojazd</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light text-muted border-end-0">
+                                    <i class="bi bi-car-front-fill"></i>
+                                </span>
+                                <input class="form-control bg-light border-start-0 fw-medium text-secondary"
+                                       value="@Model.Vehicle?.Make @Model.Vehicle?.Model (@Model.Vehicle?.LicensePlate)"
+                                       disabled />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-semibold text-muted"></label>
+                            <textarea asp-for="Description" class="form-control shadow-sm" rows="4" placeholder="Szczegóły wykonanej usługi..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 ps-md-4">
+                        <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Koszty i Terminy</h5>
+
+                        <div class="mb-4">
+                            <label asp-for="Cost" class="form-label fw-semibold text-muted"></label>
+                            <div class="input-group shadow-sm">
+                                <input asp-for="Cost" class="form-control" type="number" step="0.01" />
+                                <span class="input-group-text bg-light">PLN</span>
+                            </div>
+                            <span asp-validation-for="Cost" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-4">
+                                <label asp-for="EntryDate" class="form-label fw-semibold text-muted"></label>
+                                <input asp-for="EntryDate" class="form-control shadow-sm" type="date" />
+                                <span asp-validation-for="EntryDate" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-sm-6 mb-4">
+                                <label asp-for="ActualEndDate" class="form-label fw-bold text-success">Zakończenie naprawy</label>
+                                <input asp-for="ActualEndDate" class="form-control border-success bg-success bg-opacity-10 shadow-sm" type="date" />
+                                <span asp-validation-for="ActualEndDate" class="text-danger small"></span>
+                                <div class="form-text text-muted small mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>Wpisanie daty automatycznie zmieni status pojazdu na 'Dostępny'.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4 text-light" />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Anuluj i wróć</a>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-2"></i>Zapisz zmiany</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media (min-width: 768px) {
+        .border-end-md {
+            border-right: 1px solid #dee2e6 !important;
+        }
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('#EntryDate').on('change', function () {
+                var entryDate = $(this).val();
+                if (entryDate) {
+                    $('#PlannedEndDate').attr('min', entryDate);
+                    $('#ActualEndDate').attr('min', entryDate);
+                }
+            });
+
+            $('#EntryDate').trigger('change');
+        });
+    </script>
+}

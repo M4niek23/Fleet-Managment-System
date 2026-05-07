@@ -1,0 +1,297 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Fleet Manager</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            background-color: #ffffff; 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05); 
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            overflow-y:auto;
+        }
+
+            .sidebar .nav-link {
+                color: #555; 
+                font-weight: 500;
+                padding: 12px 20px;
+                margin: 4px 12px;
+                border-radius: 8px;
+                transition: all 0.2s ease-in-out;
+                display: flex;
+                align-items: center;
+            }
+
+                .sidebar .nav-link i {
+                    font-size: 1.1rem;
+                    margin-right: 12px;
+                    color: #adb5bd; 
+                }
+
+                .sidebar .nav-link:hover {
+                    background-color: #f1f3f5;
+                    color: #0d6efd; 
+                }
+
+                    .sidebar .nav-link:hover i {
+                        color: #0d6efd;
+                    }
+
+                .sidebar .nav-link.active {
+                    background-color: #0d6efd; 
+                    color: #ffffff; 
+                    box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+                }
+
+                    .sidebar .nav-link.active i {
+                        color: #ffffff;
+                    }
+        .collapse .nav-link {
+            padding-left: 45px;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #000;
+            text-decoration: none;
+        }
+
+        .app-wrap {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding-bottom: 60px; 
+        }
+
+        .navbar {
+            background-color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            border-bottom: 1px solid #eee;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                display: none !important; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-wrap">
+
+        <aside class="sidebar d-none d-md-flex flex-column">
+
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                <div class="bg-primary text-white rounded p-2 d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 36px; height: 36px;">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <span>Fleet<span class="text-primary">Manager</span></span>
+            </a>
+
+            <nav class="nav flex-column flex-grow-1 mt-2">
+
+                @{
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                }
+               
+                <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">
+                    <i class="bi bi-person-circle"></i> Moje konto
+                </a>
+
+                <div class="px-3 mb-2 mt-2">
+                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Pulpit</small>
+                </div>
+
+                <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+
+                <div class="px-3 mb-2 mt-4">
+                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Zarządzanie</small>
+                </div>
+
+                @{
+                    bool isFleetActive = new[] { "Vehicles", "Insurance", "Inspections" }.Contains(currentController);
+                }
+
+                <a class="nav-link @(isFleetActive ? "text-primary fw-bold" : "")" data-bs-toggle="collapse" href="#fleetSubmenu" role="button" aria-expanded="@isFleetActive.ToString().ToLower()">
+                    <i class="bi bi-collection-fill"></i> Moja Flota
+                    <i class="bi bi-chevron-down ms-auto" style="font-size: 0.8rem;"></i>
+                </a>
+                <div class="collapse @(isFleetActive ? "show" : "")" id="fleetSubmenu">
+                    <nav class="nav flex-column">
+                        <a class="nav-link @(currentController == "Vehicles" ? "active" : "")" asp-controller="Vehicles" asp-action="Index">
+                            <i class="bi bi-car-front"></i>Pojazdy
+                        </a>
+                        <a class="nav-link @(currentController == "Insurance" ? "active" : "")" asp-controller="Insurance" asp-action="Index">
+                            <i class="bi bi-shield"></i>Ubezpieczenia
+                        </a>
+                        <a class="nav-link @(currentController == "Inspections" ? "active" : "")" asp-controller="Inspections" asp-action="Index">
+                            <i class="bi bi-list-check"></i>Przeglądy
+                        </a>
+                    </nav>
+                </div>
+
+                <a class="nav-link @(currentController == "Drivers" ? "active" : "")" asp-controller="Drivers" asp-action="Index">
+                    <i class="bi bi-person-badge-fill"></i> Kierowcy
+                </a>
+
+                <a class="nav-link @(currentController == "Trips" ? "active" : "")" asp-controller="Trips" asp-action="Index">
+                    <i class="bi bi-geo-alt-fill"></i> Trasy
+                </a>
+
+                <a class="nav-link @(currentController == "Costs" ? "active" : "")" asp-controller="Costs" asp-action="Index">
+                    <i class="bi bi-wallet2"></i> Koszty
+                </a>
+                <a class="nav-link @(currentController == "Services" ? "active" : "")" asp-controller="Services" asp-action="Index">
+                    <i class="bi bi-wrench-adjustable"></i> Serwis
+                </a>
+                @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                {
+                    <a class="nav-link @(currentController == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                        <i class="bi bi-book-fill"></i> Raporty
+                    </a>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="px-3 mb-2 mt-4">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Administrator</small>
+                    </div>
+                    <a class="nav-link @(currentController == "Admin" ? "active" : "")" asp-controller="Admin" asp-action="Index">
+                        <i class="bi bi-shield-lock-fill"></i> Role i Uprawnienia
+                    </a>
+                }
+
+            </nav>
+
+            <div class="mt-auto border-top py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                        &copy; 2025 Fleet Manager
+                    </span>
+                </div>
+            </div>
+        </aside>
+
+
+        <div class="d-flex flex-column flex-grow-1">
+
+            <header>
+                <nav class="navbar navbar-expand navbar-light bg-white sticky-top px-4 py-2">
+
+                    <button class="btn btn-light d-md-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                        <i class="bi bi-list fs-4"></i>
+                    </button>
+
+                    <span class="navbar-text fw-bold text-dark d-none d-md-block fs-5">
+                        @ViewData["Title"]
+                    </span>
+
+                    <div class="ms-auto">
+                        <partial name="_LoginPartial" />
+                    </div>
+                </nav>
+            </header>
+
+            <main class="content px-4 py-4">
+                @RenderBody()
+            </main>
+
+        </div>
+    </div>
+
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold">Fleet Manager</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+                <nav class="nav flex-column p-3">
+                    <a class="nav-link py-3 border-bottom @(currentController == "Account" && currentAction == "MyAccount" ? "text-primary fw-bold" : "text-dark")" asp-controller="Account" asp-action="MyAccount">Moje konto</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Home" && currentAction == "Index" ? "text-primary fw-bold" : "text-dark")" asp-controller="Home" asp-action="Index">Dashboard</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Vehicles" ? "text-primary fw-bold" : "text-dark")" asp-controller="Vehicles" asp-action="Index">Pojazdy</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Insurance" ? "text-primary fw-bold" : "text-dark")" asp-controller="Insurance" asp-action="Index">Ubezpieczenia</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Inspections" ? "text-primary fw-bold" : "text-dark")" asp-controller="Inspections" asp-action="Index">Przeglądy</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Trips" ? "text-primary fw-bold" : "text-dark")" asp-controller="Trips" asp-action="Index">Trasy</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Drivers" ? "text-primary fw-bold" : "text-dark")" asp-controller="Drivers" asp-action="Index">Kierowcy</a>
+                    <a class="nav-link py-3 border-bottom @(currentController == "Services" ? "text-primary fw-bold" : "text-dark")" asp-controller="Services" asp-action="Index">Serwis</a>
+                    @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                    {
+                        <a class="nav-link py-3 border-bottom @(currentController == "Reports" ? "text-primary fw-bold" : "text-dark")" asp-controller="Reports" asp-action="Index">Raporty</a>
+                    }
+                </nav>
+        </div>
+    </div>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var triggerTabList = [].slice.call(document.querySelectorAll('#vehicleTabs button'))
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Mechanim okienka odnośnie usuwania rekordów z systemu
+            $(document).on('click', '.btn-delete-swal', function (e) {
+                e.preventDefault(); // Zatrzymujemy domyślne kliknięcie
+                var form = $(this).closest('form');
+
+                Swal.fire({
+                    title: 'Czy na pewno chcesz usunąć?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',  
+                    confirmButtonText: '<i class="bi bi-trash me-1"></i> Tak, usuń',
+                    cancelButtonText: 'Anuluj'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", false)
+</body>
+</html>

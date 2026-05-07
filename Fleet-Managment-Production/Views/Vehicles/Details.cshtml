@@ -1,0 +1,340 @@
+﻿@model Fleet_Managment_Production.Models.Vehicle
+
+@{
+    ViewData["Title"] = "Karta Pojazdu - " + Model.LicensePlate;
+    var totalCost = Model.Costs?.Sum(c => c.Amount) ?? 0;
+    double avgConsumption = ViewBag.AvgConsumption ?? 0;
+}
+
+<style>
+    .badge-soft {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 3px 10px;
+        border-radius: 6px;
+    }
+
+    .badge-soft-success {
+        background: #EAF3DE;
+        color: #3B6D11;
+    }
+
+    .badge-soft-primary {
+        background: #E6F1FB;
+        color: #185FA5;
+    }
+
+    .badge-soft-warning {
+        background: #FAEEDA;
+        color: #854F0B;
+    }
+
+    .badge-soft-gray {
+        background: #F1EFE8;
+        color: #5F5E5A;
+    }
+
+    .custom-tabs .nav-link:not(.active) {
+        color: #6c757d !important;
+    }
+
+    .custom-tabs .nav-link.active {
+        color: #212529 !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4">
+        <div class="col-md-7 mb-3 mb-md-0">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-4 me-4 d-none d-sm-block">
+                        <i class="bi bi-car-front-fill fs-1"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">@Model.Make @Model.Model</h3>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <span class="badge bg-dark fs-6 border border-light shadow-sm">@Model.LicensePlate</span>
+                            <span class="text-muted">|</span>
+                            <span class="text-muted font-monospace small">@Model.VIN</span>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                            @switch (Model.Status)
+                            {
+                                case Fleet_Managment_Production.Models.VehicleStatus.Available:
+                                    <span class="badge-soft badge-soft-success">Dostępny</span>
+                                    break;
+                                case Fleet_Managment_Production.Models.VehicleStatus.InUse:
+                                    <span class="badge-soft badge-soft-primary">W trasie</span>
+                                    break;
+                                case Fleet_Managment_Production.Models.VehicleStatus.InMaintenance:
+                                    <span class="badge-soft badge-soft-warning">Serwis</span>
+                                    break;
+                                case Fleet_Managment_Production.Models.VehicleStatus.Sold:
+                                    <span class="badge-soft badge-soft-gray">Sprzedany</span>
+                                    break;
+                                default:
+                                    <span class="badge-soft badge-soft-gray">@Model.Status</span>
+                                    break;
+                            }
+                            <span class="text-muted small"><i class="bi bi-fuel-pump me-1"></i>@Model.FuelType</span>
+                            <span class="text-muted small"><i class="bi bi-calendar me-1"></i>@Model.ProductionYear</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase small fw-bold mb-3" style="font-size: 0.7rem;">Statystyki i akcje</p>
+                    <div class="row text-center mb-3">
+                        <div class="col-6 border-end">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Przebieg</small>
+                            <span class="fw-bold fs-5">@Model.CurrentKm <small class="fs-6 text-muted">km</small></span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Śr. spalanie</small>
+                            @if (avgConsumption > 0)
+                            {
+                                <span class="fw-bold fs-5 text-warning">@avgConsumption.ToString("F1") <small class="fs-6">L/100km</small></span>
+                            }
+                            else
+                            {
+                                <span class="fw-bold fs-5 text-muted">--</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+                        <span class="text-muted small">Łączne koszty:</span>
+                        <span class="fw-bold fs-5 text-primary">@totalCost.ToString("C")</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.VehicleId" class="btn btn-primary shadow-sm btn-sm">
+                                <i class="bi bi-pencil-square me-2"></i>Edytuj pojazd
+                            </a>
+                        }
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm shadow-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Powrót do listy
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white p-0 border-bottom">
+            <ul class="nav nav-tabs border-0 custom-tabs" id="vehicleTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold px-4 py-3" id="trips-tab" data-bs-toggle="tab" data-bs-target="#trips" type="button" role="tab">
+                        <i class="bi bi-geo-alt me-2"></i>Historia tras
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-4 py-3" id="inspections-tab" data-bs-toggle="tab" data-bs-target="#inspections" type="button" role="tab">
+                        <i class="bi bi-tools me-2"></i>Przeglądy
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-4 py-3" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab">
+                        <i class="bi bi-shield-check me-2"></i>Ubezpieczenia
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-4 py-3" id="costs-tab" data-bs-toggle="tab" data-bs-target="#costs" type="button" role="tab">
+                        <i class="bi bi-wallet2 me-2"></i>Koszty i paliwo
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content" id="vehicleTabsContent">
+
+                <div class="tab-pane fade show active" id="trips" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Data</th>
+                                    <th>Trasa</th>
+                                    <th>Kierowca</th>
+                                    <th>Dystans</th>
+                                    <th>Typ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Trips != null && Model.Trips.Any())
+                                {
+                                    @foreach (var trip in Model.Trips)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">@trip.StartDate.ToShortDateString()</td>
+                                            <td>@trip.StartLocation &rarr; @trip.EndLocation</td>
+                                            <td>@(trip.Driver?.LastName ?? "-")</td>
+                                            <td>@trip.EstimatedDistanceKm km</td>
+                                            <td>@(trip.TripType == Fleet_Managment_Production.Models.TripType.Business ? "Służbowa" : "Prywatna")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="5" class="text-center py-4 text-muted">Brak zarejestrowanych tras.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="inspections" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Data</th>
+                                    <th>Przebieg</th>
+                                    <th>Wynik</th>
+                                    <th>Następny</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Inspections != null && Model.Inspections.Any())
+                                {
+                                    @foreach (var insp in Model.Inspections)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">@insp.InspectionDate.ToShortDateString()</td>
+                                            <td>@(insp.Mileage?.ToString() ?? "-") km</td>
+                                            <td>
+                                                @if (insp.IsResultPositive == true)
+                                                {
+                                                    <span class="badge-soft badge-soft-success">Pozytywny</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge-soft" style="background:#FCEBEB;color:#A32D2D;">Negatywny</span>
+                                                }
+                                            </td>
+                                            <td>@(insp.NextInspectionDate?.ToShortDateString() ?? "-")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">Brak historii przeglądów.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="insurance" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Polisa</th>
+                                    <th>Ważna do</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Insurances != null && Model.Insurances.Any())
+                                {
+                                    @foreach (var ins in Model.Insurances)
+                                    {
+                                        var isExpired = ins.ExpiryDate < DateTime.Today;
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold">@ins.PolicyNumber</div>
+                                                <div class="small text-muted">@ins.InsurareName</div>
+                                            </td>
+                                            <td class="@(isExpired ? "text-danger fw-bold" : "")">
+                                                @ins.ExpiryDate.ToShortDateString()
+                                            </td>
+                                            <td>
+                                                @if (isExpired)
+                                                {
+                                                    <span class="badge-soft badge-soft-gray">Archiwalna</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge-soft badge-soft-success">Aktywna</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="3" class="text-center py-4 text-muted">Brak ubezpieczeń.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="costs" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Data</th>
+                                    <th>Kategoria</th>
+                                    <th>Szczegóły (L / km)</th>
+                                    <th class="text-end pe-4">Kwota</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Costs != null && Model.Costs.Any())
+                                {
+                                    @foreach (var cost in Model.Costs)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">@cost.Data.ToShortDateString()</td>
+                                            <td>
+                                                @if (cost.Type == Fleet_Managment_Production.Models.CostType.Paliwo)
+                                                {
+                                                    <span class="badge-soft badge-soft-warning"><i class="bi bi-fuel-pump me-1"></i>Paliwo</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge-soft badge-soft-gray">@cost.Type</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (cost.Type == Fleet_Managment_Production.Models.CostType.Paliwo && cost.Liters.HasValue)
+                                                {
+                                                    <div class="fw-bold">@cost.Liters L @(cost.IsFullTank ? "(Pełny)" : "")</div>
+                                                    <div class="small text-muted"><i class="bi bi-speedometer2"></i> @cost.CurrentOdometer km</div>
+                                                }
+                                                else
+                                                {
+                                                    @cost.Description
+                                                }
+                                            </td>
+                                            <td class="text-end pe-4 fw-bold text-primary">@cost.Amount.ToString("C")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">Brak zarejestrowanych kosztów.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

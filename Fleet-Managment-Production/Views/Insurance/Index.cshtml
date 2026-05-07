@@ -1,0 +1,265 @@
+﻿@using Fleet_Managment_Production.Models
+@{
+    var activeInsurances = ViewBag.ActiveInsurances as List<Insurance>;
+    var historyInsurances = ViewBag.HistoryInsurances as List<Insurance>;
+    var totalSum = ViewBag.TotalSum != null ? (decimal)ViewBag.TotalSum : 0m;
+    var activeTab = ViewBag.ActiveTab as string ?? "active";
+}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Ubezpieczenia</h3>
+            <p class="text-muted mb-0">Zarządzaj ubezpieczeniami w Twojej firmie</p>
+            <p class="text-muted mb-0">Pojazd: <strong>@ViewBag.VehicleRegistration</strong></p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white px-3 py-2 rounded shadow-sm border border-primary-subtle">
+
+                <small class="text-muted d-block text-uppercase" style="font-size:0.7rem;">Koszt aktywnych polis</small>
+                <span class="fw-bold text-primary fs-5">@totalSum.ToString("C")</span>
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a asp-action="Create" asp-route-vehicleId="@ViewBag.VehicleId" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-lg me-2"></i>Dodaj Polisę
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body py-2">
+            <form method="get" asp-action="Index" class="row g-2 align-items-center">
+
+                <div class="col-auto">
+                    <label class="text-secondary small fw-bold">Pojazd:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="id" class="form-select form-select-sm border-0 shadow-sm" asp-items="@ViewBag.VehicleList" onchange="this.form.submit()">
+                        <option value="">Wszystkie pojazdy</option>
+                    </select>
+                </div>
+                <div class="col-auto ms-auto">
+                    <input type="text" name="searchString" class="form-control form-control-sm border-0 shadow-sm" placeholder="Szukaj polisy..." value="@ViewData["CurrentFilter"]">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-dark"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white p-0 border-bottom">
+            <ul class="nav nav-tabs border-0 custom-tabs" id="insuranceTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "active" ? "active" : "") fw-bold px-4 py-3" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
+                        Aktualne <span class="badge ms-2">@ViewBag.ActiveCount</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "history" ? "active" : "") fw-bold px-4 py-3" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                        Historia <span class="badge ms-2">@ViewBag.HistoryCount</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-0">
+            <div class="tab-content" id="insuranceTabsContent">
+
+                <div class="tab-pane fade @(activeTab == "active" ? "show active" : "")" id="active" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Okres ubezpieczenia</th>
+                                    <th>Pojazd</th>
+                                    <th>Ubezpieczyciel / Nr Polisy</th>
+                                    <th class="text-end">Koszt</th>
+                                    <th class="text-end pe-4">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (activeInsurances != null && activeInsurances.Any())
+                                {
+                                    foreach (var item in activeInsurances)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="small fw-bold">@item.StartDate.ToShortDateString() - @item.ExpiryDate.ToShortDateString()</div>
+                                                @if (item.ExpiryDate < DateTime.Now.AddDays(14))
+                                                {
+                                                    <span class="badge bg-danger-soft text-danger p-0" style="font-size: 0.7rem;">Wygasa za chwilę!</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold">@item.Vehicle?.LicensePlate</div>
+                                                <div class="small text-muted">@item.Vehicle?.Make @item.Vehicle?.Model</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold">@item.InsurareName</div>
+                                                <div class="small text-secondary">@item.PolicyNumber</div>
+                                            </td>
+                                            <td class="text-end fw-bold text-primary">@item.Cost.ToString("C")</td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group shadow-sm">
+                                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn-table-action" title="Szczegóły">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                                    {
+                                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-table-action" title="Edytuj">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    }
+                                                    @if (User.IsInRole("Admin"))
+                                                    {
+                                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                            <button type="button" class="btn-table-action btn-delete-swal" title="Usuń">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Brak aktualnych ubezpieczeń.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (ViewBag.ActiveTotalPages > 1)
+                    {
+                        <nav aria-label="Nawigacja stronami" class="mt-4 pb-4">
+                            <ul class="pagination justify-content-center flex-wrap shadow-sm mb-0">
+                                <li class="page-item @(ViewBag.ActiveCurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-activePage="@(ViewBag.ActiveCurrentPage - 1)"
+                                       asp-route-historyPage="@ViewBag.HistoryCurrentPage"
+                                       asp-route-tab="active"
+                                       asp-route-id="@ViewBag.VehicleId"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+
+                                @for (int i = 1; i <= ViewBag.ActiveTotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.ActiveCurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-activePage="@i"
+                                           asp-route-historyPage="@ViewBag.HistoryCurrentPage"
+                                           asp-route-tab="active"
+                                           asp-route-id="@ViewBag.VehicleId"
+                                           asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(ViewBag.ActiveCurrentPage == ViewBag.ActiveTotalPages ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-activePage="@(ViewBag.ActiveCurrentPage + 1)"
+                                       asp-route-historyPage="@ViewBag.HistoryCurrentPage"
+                                       asp-route-tab="active"
+                                       asp-route-id="@ViewBag.VehicleId"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+
+                </div>
+
+                <div class="tab-pane fade @(activeTab == "history" ? "show active" : "")" id="history" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-muted">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Data zakończenia</th>
+                                    <th>Pojazd</th>
+                                    <th>Ubezpieczyciel</th>
+                                    <th class="text-end">Koszt</th>
+                                    <th class="text-end pe-4">Szczegóły</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (historyInsurances != null && historyInsurances.Any())
+                                {
+                                    foreach (var item in historyInsurances)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">@item.ExpiryDate.ToShortDateString()</td>
+                                            <td>@item.Vehicle?.LicensePlate</td>
+                                            <td>@item.InsurareName</td>
+                                            <td class="text-end">@item.Cost.ToString("C")</td>
+                                            <td class="text-end pe-4">
+                                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light border table-action-btn text-secondary">
+                                                    <i class="bi bi-archive"></i> Archiwum
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Brak archiwalnych ubezpieczeń.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (ViewBag.HistoryTotalPages > 1)
+                    {
+                        <nav aria-label="Nawigacja stronami" class="mt-4 pb-4">
+                            <ul class="pagination justify-content-center flex-wrap shadow-sm mb-0">
+                                <li class="page-item @(ViewBag.HistoryCurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-historyPage="@(ViewBag.HistoryCurrentPage - 1)"
+                                       asp-route-activePage="@ViewBag.ActiveCurrentPage"
+                                       asp-route-tab="history"
+                                       asp-route-id="@ViewBag.VehicleId"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+
+                                @for (int i = 1; i <= ViewBag.HistoryTotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.HistoryCurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-historyPage="@i"
+                                           asp-route-activePage="@ViewBag.ActiveCurrentPage"
+                                           asp-route-tab="history"
+                                           asp-route-id="@ViewBag.VehicleId"
+                                           asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(ViewBag.HistoryCurrentPage == ViewBag.HistoryTotalPages ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-historyPage="@(ViewBag.HistoryCurrentPage + 1)"
+                                       asp-route-activePage="@ViewBag.ActiveCurrentPage"
+                                       asp-route-tab="history"
+                                       asp-route-id="@ViewBag.VehicleId"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
