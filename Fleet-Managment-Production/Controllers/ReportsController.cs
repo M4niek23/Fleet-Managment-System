@@ -74,9 +74,7 @@ namespace Fleet_Managment_Production.Controllers
                 VehicleName = $"{v.Make} {v.Model}",
                 LicensePlate = v.LicensePlate,
 
-                // Poprawiono: uzycie 'Kwota' zamiast 'Amount' oraz usunięto '?? 0'
                 FuelCost = v.Costs.Where(c => c.Type == CostType.Paliwo && c.Data >= model.StartDate && c.Data <= model.EndDate).Sum(c => c.Amount),
-                // Poprawiono: usunięto '?? 0' z s.Cost
                 ServiceCost = v.Services.Where(s => s.EntryDate >= model.StartDate && s.EntryDate <= model.EndDate).Sum(s => s.Cost)
             })
             .Where(x => x.TotalCost > 0)
@@ -87,47 +85,49 @@ namespace Fleet_Managment_Production.Controllers
         // --- 2. RAPORT SPALANIA ---
         private async Task GenerateFuelReport(ReportsViewModel model)
         {
-            // 1. Zabezpieczenie zakresu dat (ustawiamy koniec na 23:59:59 danego dnia)
             var start = model.StartDate?.Date ?? DateTime.MinValue;
             var end = model.EndDate?.Date.AddDays(1).AddTicks(-1) ?? DateTime.MaxValue;
 
-            var vehicles = await _context.Vehicles.Include(v => v.Costs).ToListAsync();
+            var vehicles = await _context.Vehicles
+                .Include(v => v.Costs)
+                .Include(v => v.Trips)
+                .ToListAsync();
+
             var fuelReportList = new List<FuelReportItem>();
 
             foreach (var v in vehicles)
             {
-                // 2. Pobieramy wszystkie koszty paliwa dla pojazdu w wybranym przedziale
                 var fuelCosts = v.Costs
                     .Where(c => c.Type == CostType.Paliwo && c.Data >= start && c.Data <= end)
-                    .OrderBy(c => c.CurrentOdometer)
+                    .OrderBy(c => c.Data) 
                     .ToList();
 
-                // Jeśli pojazd nie ma ani jednego paragonu na paliwo -> pomijamy go w tabeli
                 if (!fuelCosts.Any()) continue;
 
-                int distance = 0;
-
-                // 3. Sumujemy tylko te litry, które faktycznie zapisały się w bazie (nie są null)
                 double liters = fuelCosts.Where(c => c.Liters.HasValue).Sum(c => c.Liters.Value);
 
-                // 4. Obliczamy dystans (wymaga min. 2 wpisów z podanym przebiegiem)
-                var costsWithOdo = fuelCosts.Where(c => c.CurrentOdometer.HasValue).ToList();
+                int distanceFromTrips = v.Trips
+                    .Where(t => t.StartDate >= start && t.StartDate <= end)
+                    .Sum(t => t.RealDistance);
+
+                int distanceFromCosts = 0;
+                var costsWithOdo = fuelCosts.Where(c => c.CurrentOdometer.HasValue).OrderBy(c => c.CurrentOdometer).ToList();
                 if (costsWithOdo.Count >= 2)
                 {
-                    distance = costsWithOdo.Last().CurrentOdometer.Value - costsWithOdo.First().CurrentOdometer.Value;
+                    distanceFromCosts = costsWithOdo.Last().CurrentOdometer.Value - costsWithOdo.First().CurrentOdometer.Value;
                 }
 
-                // Dodajemy auto do raportu NIEZALEŻNIE od tego, czy dało się policzyć dystans
+                int finalDistance = Math.Max(distanceFromTrips, distanceFromCosts);
+
                 fuelReportList.Add(new FuelReportItem
                 {
                     VehicleName = $"{v.Make} {v.Model}",
                     LicensePlate = v.LicensePlate,
-                    DistanceTraveled = distance,
+                    DistanceTraveled = finalDistance,
                     TotalLiters = liters
                 });
             }
 
-            // Sortujemy i przekazujemy do widoku
             model.FuelData = fuelReportList.OrderByDescending(x => x.TotalLiters).ToList();
         }
 
@@ -142,7 +142,6 @@ namespace Fleet_Managment_Production.Controllers
                 LicensePlate = v.LicensePlate,
                 ServiceCount = v.Services.Count(s => s.EntryDate >= model.StartDate && s.EntryDate <= model.EndDate),
 
-                // Poprawiono: usunięto '?? 0' z s.Cost
                 TotalServiceCost = v.Services.Where(s => s.EntryDate >= model.StartDate && s.EntryDate <= model.EndDate).Sum(s => s.Cost)
             })
             .Where(x => x.ServiceCount > 0)
@@ -160,7 +159,6 @@ namespace Fleet_Managment_Production.Controllers
                 DriverName = $"{d.FirstName} {d.LastName}",
                 TripsCount = d.Trips.Count(t => t.StartDate >= model.StartDate && t.StartDate <= model.EndDate),
 
-                // Poprawiono: użycie 'RealDistance' z Twojego modelu Trip
                 TotalDistance = d.Trips.Where(t => t.StartDate >= model.StartDate && t.StartDate <= model.EndDate).Sum(t => t.RealDistance)
             })
             .Where(x => x.TripsCount > 0)
@@ -182,14 +180,12 @@ namespace Fleet_Managment_Production.Controllers
 
             foreach (var v in vehicles)
             {
-                // Ubezpieczenia - zakładam, że mają właściwość ExpiryDate
                 var endingInsurance = v.Insurances.FirstOrDefault(i => i.ExpiryDate <= warningThreshold && i.ExpiryDate >= today);
                 if (endingInsurance != null)
                 {
                     alerts.Add(new AlertsReportItem { VehicleName = $"{v.Make} {v.Model}", LicensePlate = v.LicensePlate, AlertType = "Koniec Ubezpieczenia", ExpiryDate = endingInsurance.ExpiryDate });
                 }
 
-                // Poprawiono: W modelu Inspection to 'NextInspectionDate'
                 var endingInspection = v.Inspections.FirstOrDefault(i => i.NextInspectionDate.HasValue && i.NextInspectionDate.Value <= warningThreshold && i.NextInspectionDate.Value >= today);
                 if (endingInspection != null)
                 {
@@ -198,7 +194,7 @@ namespace Fleet_Managment_Production.Controllers
                         VehicleName = $"{v.Make} {v.Model}",
                         LicensePlate = v.LicensePlate,
                         AlertType = "Koniec Przeglądu",
-                        ExpiryDate = endingInspection.NextInspectionDate.Value // Pobieramy wartość
+                        ExpiryDate = endingInspection.NextInspectionDate.Value 
                     });
                 }
             }
