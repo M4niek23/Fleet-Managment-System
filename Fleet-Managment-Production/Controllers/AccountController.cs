@@ -4,6 +4,7 @@ using Fleet_Managment_Production.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fleet_Managment_Production.Controllers
@@ -22,51 +23,56 @@ namespace Fleet_Managment_Production.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        [AllowAnonymous]
+        public IActionResult Login(string returnUrl = null)
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
-
-            if (result.Succeeded)
+            if (ModelState.IsValid)
             {
                 var user = await userManager.FindByEmailAsync(model.Email);
 
-                if (user == null)
+                // 1. Sprawdzamy czy użytkownik istnieje
+                if (user != null)
                 {
-                    ModelState.AddModelError(string.Empty,"Nieprawidłowa próba logowania.");
+                    // 2. Pobieramy jego role. Zamiast 'IsApproved', sprawdzamy czy ma jakąkolwiek rolę
+                    var roles = await userManager.GetRolesAsync(user);
+
+                    if (roles.Count == 0)
+                    {
+                        // Jeśli nie ma ról = konto nieaktywne. Odsyłamy od razu na stronę "Oczekujące"
+                        return RedirectToAction("PendingApproval", "Account");
+                    }
+                }
+
+                // 3. Dopiero gdy ma rolę, próbujemy go zalogować
+                var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: model.RememberMe, lockoutOnFailure: true);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+
+                if (result.IsLockedOut)
+                {
+                    ModelState.AddModelError(string.Empty, "Konto zostało zablokowane z powodu zbyt wielu nieudanych prób logowania. Spróbuj ponownie później.");
                     return View(model);
                 }
 
-                var roles = await userManager.GetRolesAsync(user);
-
-                if (roles.Count == 0)
-                {
-                    await signInManager.SignOutAsync();
-
-                    ModelState.AddModelError(string.Empty, "Konto nie zostało jeszcze aktywowane. Skontaktuj się z administratorem.");
-                    return View(model);
-                }
-
-                return RedirectToAction("Index", "Home");
-            }
-            if(result.IsLockedOut)
-            {
-                ModelState.AddModelError(string.Empty, "Konto zostało zablokowane z powodu zbyt wielu nieudanych prób logowania. Spróbuj ponownie później.");
-                return View(model);
+                ModelState.AddModelError(string.Empty, "Nieprawidłowy e-mail lub hasło");
             }
 
-            ModelState.AddModelError(string.Empty, "Nieprawidłowy e-mail lub hasło");
             return View(model);
         }
         [HttpGet]
