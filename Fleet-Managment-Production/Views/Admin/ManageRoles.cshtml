@@ -36,7 +36,7 @@
                                     <input type="hidden" asp-for="Roles[i].RoleName" />
                                     <input type="checkbox" asp-for="Roles[i].IsSelected" class="form-check-input border-secondary shadow-sm" style="cursor: pointer;" />
                                     <label class="form-check-label ms-2" asp-for="Roles[i].IsSelected" style="cursor: pointer;">
-                                        @Model.Roles[i].RoleName
+                                        @Model.Roles[i].RoleDisplayName
                                     </label>
                                 </div>
                             }

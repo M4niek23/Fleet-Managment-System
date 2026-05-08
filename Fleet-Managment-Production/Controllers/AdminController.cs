@@ -96,13 +96,24 @@ namespace Fleet_Managment_Production.Controllers
 
             foreach (var role in allRoles)
             {
-              if(role.Name != null)
+                if (role.Name != null)
                 {
-                    model.Roles.Add(new RoleSelectionViewModel
+                    string displayName = role.Name switch
                     {
-                        RoleName = role.Name,
-                        IsSelected = await userManager.IsInRoleAsync(user, role.Name)
-                    });
+                        "User" => "Kierowca",
+                        "Manager" => "Menedżer",
+                        "Admin" => "Administrator",
+                        _ => role.Name
+
+                    };
+                    {
+                        model.Roles.Add(new RoleSelectionViewModel
+                        {
+                            RoleName = role.Name,
+                            RoleDisplayName = displayName,
+                            IsSelected = await userManager.IsInRoleAsync(user, role.Name)
+                        });
+                    }
                 }
             }
 

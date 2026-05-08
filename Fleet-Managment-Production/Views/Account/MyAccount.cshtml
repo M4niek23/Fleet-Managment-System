@@ -25,7 +25,14 @@
                     <div class="mt-2 mb-4">
                         @foreach (var role in Model.Roles)
                         {
-                            <span class="badge bg-primary">Uprawnienia: @role</span>
+                            var displayRole = role switch
+                            {
+                                "Admin" => "Administrator",
+                                "Manager" => "Menadżer",
+                                "User" => "Kierowca",
+                                _ => role
+                            };
+                            <span class="badge bg-primary">Uprawnienia: @displayRole</span>
                         }
                         @if (!Model.Roles.Any())
                         {

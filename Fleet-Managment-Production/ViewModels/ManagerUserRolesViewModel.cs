@@ -3,6 +3,7 @@
     public class RoleSelectionViewModel
     {
         public string RoleName { get; set; }
+        public string RoleDisplayName { get; set; }
         public bool IsSelected { get; set; }
 
     }
