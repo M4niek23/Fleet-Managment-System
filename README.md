@@ -117,5 +117,12 @@ następnie zaloguj się danymi administratora
 
 ## Autorzy
 
-**Autorzy:**Patryk Mańka, Dominik Koźiński, Michał Kocik
-**Kontekst projektu:** System rozwijany m.in. w ramach kształcenia na kierunku Informatyka, demonstrujący zastosowanie wzorców projektowych i technologii webowych w ekosystemie .NET. W ramach pracy inżynierskiej.
+**Autorzy:** 
+
+**Patryk Mańka**
+
+**Dominik Koźiński**
+
+**Michał Kocik**
+
+System rozwijany m.in. w ramach kształcenia na kierunku Informatyka, demonstrujący zastosowanie wzorców projektowych i technologii webowych w ekosystemie .NET. W ramach pracy inżynierskiej.
