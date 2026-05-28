@@ -43,20 +43,16 @@ namespace Fleet_Managment_Production.Controllers
             {
                 var user = await userManager.FindByEmailAsync(model.Email);
 
-                // 1. Sprawdzamy czy użytkownik istnieje
                 if (user != null)
                 {
-                    // 2. Pobieramy jego role. Zamiast 'IsApproved', sprawdzamy czy ma jakąkolwiek rolę
                     var roles = await userManager.GetRolesAsync(user);
 
                     if (roles.Count == 0)
                     {
-                        // Jeśli nie ma ról = konto nieaktywne. Odsyłamy od razu na stronę "Oczekujące"
                         return RedirectToAction("PendingApproval", "Account");
                     }
                 }
 
-                // 3. Dopiero gdy ma rolę, próbujemy go zalogować
                 var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: model.RememberMe, lockoutOnFailure: true);
 
                 if (result.Succeeded)

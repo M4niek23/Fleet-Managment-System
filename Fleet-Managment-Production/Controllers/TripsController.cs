@@ -28,7 +28,6 @@ namespace Fleet_Managment_Production.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("Manager");
 
-            // Zapamiętujemy wybrane filtry dla widoku i paginacji
             ViewData["CurrentDriverFilter"] = filterDriverId;
             ViewData["CurrentVehicleFilter"] = filterVehicleId;
 

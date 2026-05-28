@@ -299,43 +299,36 @@
     @if (Context.Request.Method == "POST")
     {
         <script>
-            // Zmienna globalna dla wykresu (żeby można go było przeskalować)
             var reportChartInstance = null;
 
             $(document).ready(function() {
-                // 1. INICJALIZACJA SORTOWANIA TABELI (DataTables)
                 $('#reportTable').DataTable({
                     language: {
                         url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pl.json', // Tłumaczenie na polski
                     },
-                    paging: false,       // Wyłączamy strony (wszystko na jednym widoku)
-                    info: false,         // Wyłączamy tekst "Pokazano X wpisów"
-                    searching: true,     // Zostawiamy wyszukiwarkę (super bajer do raportów!)
-                    order: []            // Domyślnie brak sortowania przy starcie
+                    paging: false,       
+                    info: false,        
+                    searching: true,   
+                    order: []            
                 });
 
-                // 2. OBSŁUGA PRZYCISKU FULLSCREEN (Powiększanie/Pomniejszanie)
                 $('.btn-toggle-fullscreen').on('click', function() {
                     var $card = $(this).closest('.card');
                     var $icon = $(this).find('i');
                     var $canvas = $('#reportChart');
 
-                    // 1. Ukrywamy wykres, aby nie stawiał oporu przy kurczeniu się karty
                     $canvas.css('display', 'none');
 
-                    // 2. Przełączamy tryb pełnoekranowy
                     $card.toggleClass('card-fullscreen');
 
                     if ($card.hasClass('card-fullscreen')) {
                         $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
-                        // Blokujemy możliwość przewijania strony pod powiększoną kartą
                         $('body').css('overflow', 'hidden');
                     } else {
                         $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
                         $('body').css('overflow', '');
                     }
 
-                    // 3. Po ustabilizowaniu układu (50ms) pokazujemy wykres i każemy mu się dopasować
                     setTimeout(function() {
                         $canvas.css('display', 'block');
                         if (reportChartInstance != null) {
@@ -344,7 +337,6 @@
                     }, 50);
                 });
 
-                // 3. GENEROWANIE WYKRESU
                 var ctx = document.getElementById('reportChart');
                 if (!ctx) return;
 

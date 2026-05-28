@@ -29,7 +29,6 @@ namespace Fleet_Managment_Production.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("Manager");
 
-            // Zapamiętujemy stany dla paginacji i widoku
             ViewData["CurrentSort"] = sortOrder;
             ViewData["CategorySortParam"] = sortOrder == "category_asc" ? "category_desc" : "category_asc";
             ViewData["CurrentFilter"] = filterCategory;
@@ -44,16 +43,13 @@ namespace Fleet_Managment_Production.Controllers
                 costsQuery = costsQuery.Where(c => c.Vehicle != null && c.Vehicle.Driver != null && c.Vehicle.Driver.UserId == currentUser.Id);
             }
 
-            // --- FILTROWANIE PO KATEGORII ---
             if (filterCategory.HasValue)
             {
                 costsQuery = costsQuery.Where(c => c.Type == filterCategory.Value);
             }
 
-            // Suma wydatków oblicza się teraz na podstawie tego, co odfiltrowaliśmy!
             ViewBag.TotalSum = await costsQuery.SumAsync(c => c.Amount);
 
-            // --- SORTOWANIE (z poprzedniego kroku) ---
             switch (sortOrder)
             {
                 case "category_asc":

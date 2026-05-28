@@ -74,7 +74,6 @@ namespace Fleet_Managment_Production.Controllers
 
             if (service == null) return NotFound();
 
-            // Bezpieczeństwo
             var currentUser = await userManager.GetUserAsync(User);
             if (currentUser == null) return Unauthorized();
             if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
@@ -137,7 +136,6 @@ namespace Fleet_Managment_Production.Controllers
 
             if (service == null) return NotFound();
 
-            // Bezpieczeństwo
             var currentUser = await userManager.GetUserAsync(User);
             if (currentUser == null) return Unauthorized();
             if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
@@ -159,7 +157,6 @@ namespace Fleet_Managment_Production.Controllers
             var originalService = await context.Services.AsNoTracking().Include(s => s.Vehicle).ThenInclude(v => v!.Driver).FirstOrDefaultAsync(s => s.Id == id);
             if (originalService == null) return NotFound();
 
-            // Bezpieczeństwo
             var currentUser = await userManager.GetUserAsync(User);
             if (currentUser == null) return Unauthorized();
             if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
@@ -216,7 +213,6 @@ namespace Fleet_Managment_Production.Controllers
 
             if (service == null) return NotFound();
 
-            // Bezpieczeństwo
             var currentUser = await userManager.GetUserAsync(User);
             if (currentUser == null) return Unauthorized();
             if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))

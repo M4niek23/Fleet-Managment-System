@@ -7,7 +7,6 @@ namespace Fleet_Managment_Production.Services
 {
     public class TestDataSeed
     {
-        // UWAGA: Zwróć uwagę, że dodaliśmy tutaj z powrotem UserManager!
         public static async Task SeedTestDataAsync(AppDbContext context, UserManager<Users> userManager)
         {
             if (context.Vehicles.Any()) return;
@@ -16,7 +15,6 @@ namespace Fleet_Managment_Production.Services
             var locale = "pl";
             var sysRand = new Random(12345);
 
-            // 1. GENEROWANIE 50 KONT UŻYTKOWNIKÓW IDENTITY
             var usersList = new List<Users>();
             var userFaker = new Faker("pl");
 
@@ -31,7 +29,6 @@ namespace Fleet_Managment_Production.Services
                     EmailConfirmed = true
                 };
 
-                // Tworzymy konto w bazie z domyślnym hasłem
                 var result = await userManager.CreateAsync(user, "KontoTestowe123!");
                 if (result.Succeeded)
                 {
@@ -55,7 +52,7 @@ namespace Fleet_Managment_Production.Services
             {
                 if (i < usersList.Count)
                 {
-                    drivers[i].UserId = usersList[i].Id;    // <--- TUTAJ WIĄŻEMY KIEROWCĘ Z BAZĄ IDENTITY
+                    drivers[i].UserId = usersList[i].Id;    
                     drivers[i].Email = usersList[i].Email;
                 }
             }

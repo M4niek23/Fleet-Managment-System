@@ -172,7 +172,6 @@ namespace Fleet_Managment_Production.Controllers
             {
                 if (insurance.IsCurrent)
                 {
-                    // Deaktywacja poprzednich polis dla tego auta
                     var activeInsurances = await context.Insurances
                         .Where(i => i.VehicleId == insurance.VehicleId && i.IsCurrent)
                         .ToListAsync();
